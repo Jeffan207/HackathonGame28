@@ -4,6 +4,7 @@ using UnityEngine.Networking;
 
 public class Player : NetworkBehaviour {
     public float speed = 2;
+
 	void Update () {
         if (this.isLocalPlayer)
         {
