@@ -57,6 +57,14 @@ public class Player : NetworkBehaviour {
     [SyncVar]
     internal bool alive;
 
+	//sprite properties
+	public Sprite stillSprite;
+	public Sprite moveSprite;
+
+	//sound effects
+	public AudioClip grappleHitSound;
+	private AudioSource astronautSoundSource;
+
     [Header("")]
     public GameObject deathPrefab;
     public MeshRenderer myRenderer;
@@ -68,6 +76,7 @@ public class Player : NetworkBehaviour {
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+		astronautSoundSource = GetComponentInChildren<AudioSource> ();
     }
 
     void Start()
@@ -104,12 +113,17 @@ public class Player : NetworkBehaviour {
                 // TODO swipe to grapple, tap to disconnect grapple
                 if (Input.GetMouseButtonDown(0))
                 {
+					this.gameObject.GetComponentInChildren <SpriteRenderer>().sprite = moveSprite;
+					astronautSoundSource.clip = grappleHitSound;
+					astronautSoundSource.pitch = Random.Range (.8f, 1.2f);
+					astronautSoundSource.Play ();
                     // tap to shoot grapple
                     CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
 
                     // tap to move
                     currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
                     currentAcceleration = tapToMoveAcceleration;
+				
                 }
 
                 // press space to drop grapple
@@ -134,6 +148,7 @@ public class Player : NetworkBehaviour {
                         pulling = false;
                         pivoting = true;
                     }
+					this.gameObject.GetComponentInChildren <SpriteRenderer>().sprite = stillSprite;
                 }
                 // in this phase, we are constrained by a rope of a certain length
                 else if(pivoting)
@@ -268,6 +283,17 @@ public class Player : NetworkBehaviour {
         {
             Player player = identity.GetComponent<Player>();
             // TODO player-player grappling
+			// Attaching to the grappled player detaches their grapple
+			player.grapplePrefab = null;
+			player.grappleInstance = null;
+			player.pulling = false;
+			player.pivoting = false;
+			player.pivot.x = 0;
+			player.pivot.y = 0;
+			player.pivot.z = 0;
+			player.pullTime = 0;
+			player.pullForce = 0;
+
         }
     }
 

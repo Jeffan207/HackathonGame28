@@ -80,6 +80,7 @@ public class MyNetworkManager : NetworkManager {
         }
 
         levelGenerator.StartNewRound();
+
     }
 
     public void LeaveGame()
