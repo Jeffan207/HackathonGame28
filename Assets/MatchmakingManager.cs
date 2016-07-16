@@ -41,19 +41,21 @@ public class MatchmakingManager : MonoBehaviour {
 
     void OnGUI()
     {
-        // You would normally not join a match you created yourself but this is possible here for demonstration purposes.
-
-        if (GUILayout.Button("Local Game Start"))
+        if (Debug.isDebugBuild)
         {
-            GetComponent<MyNetworkManager>().StartHost();
-            FindObjectOfType<Canvas>().enabled = false;
-        }
-        if (GUILayout.Button("Local Game Join"))
-        {
-            GetComponent<MyNetworkManager>().StartClient();
-            FindObjectOfType<Canvas>().enabled = false;
+            if (GUILayout.Button("Local Game Start"))
+            {
+                GetComponent<MyNetworkManager>().StartHost();
+                FindObjectOfType<Canvas>().enabled = false;
+            }
+            if (GUILayout.Button("Local Game Join"))
+            {
+                GetComponent<MyNetworkManager>().StartClient();
+                FindObjectOfType<Canvas>().enabled = false;
+            }
         }
 
+        /*
         if (matchList.Count > 0)
         {
             GUILayout.Label("Current rooms");
@@ -65,6 +67,7 @@ public class MatchmakingManager : MonoBehaviour {
                 networkMatch.JoinMatch(match.networkId, "", OnMatchJoined);
             }
         }
+        */
     }
 
     public void OnMatchCreate(CreateMatchResponse matchResponse)
@@ -119,15 +122,5 @@ public class MatchmakingManager : MonoBehaviour {
             Debug.LogError("Join match failed");
         }
     }
-    
-    public void OnConnected(NetworkMessage msg)
-    {
-        Debug.Log("Connected!");
-    }/*
-        GameObject localPlayer = Instantiate(playerPrefab);
-
-        NetworkServer.SpawnWithClientAuthority(localPlayer, msg.conn);
-    }
-    */
 }
 

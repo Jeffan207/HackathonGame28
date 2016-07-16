@@ -239,7 +239,10 @@ public class Player : NetworkBehaviour {
 
     public void OnGUI()
     {
-        GUI.Label(new Rect(100, 100, 100, 20), penultimatePlayer.transform.position.y.ToString());
+        if (Debug.isDebugBuild)
+        {
+            GUI.Label(new Rect(100, 100, 100, 20), penultimatePlayer.transform.position.y.ToString());
+        }
     }
 
 
