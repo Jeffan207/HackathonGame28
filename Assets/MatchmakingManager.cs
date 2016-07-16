@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 public class MatchmakingManager : MonoBehaviour {
 
+    public GameObject playerPrefab;
 
     List<MatchDesc> matchList = new List<MatchDesc>();
     bool matchCreated;
@@ -13,7 +14,9 @@ public class MatchmakingManager : MonoBehaviour {
 
     void Awake()
     {
-            networkMatch = gameObject.GetComponent<MyNetworkMatch>();
+        networkMatch = gameObject.GetComponent<MyNetworkMatch>();
+
+        ClientScene.RegisterPrefab(playerPrefab);
     }
 
     void OnGUI()
@@ -55,7 +58,8 @@ public class MatchmakingManager : MonoBehaviour {
             Debug.Log("Create match succeeded");
             matchCreated = true;
             Utility.SetAccessTokenForNetwork(matchResponse.networkId, new NetworkAccessToken(matchResponse.accessTokenString));
-            NetworkServer.Listen(new MatchInfo(matchResponse), 9000);
+            //NetworkServer.Listen(new MatchInfo(matchResponse), 9000);
+            GetComponent<MyNetworkManager>().StartHost(new MatchInfo(matchResponse));
         }
         else
         {
@@ -89,19 +93,25 @@ public class MatchmakingManager : MonoBehaviour {
                 return;
             }
             Utility.SetAccessTokenForNetwork(matchJoin.networkId, new NetworkAccessToken(matchJoin.accessTokenString));
-            NetworkClient myClient = new NetworkClient();
-            myClient.RegisterHandler(MsgType.Connect, OnConnected);
-            myClient.Connect(new MatchInfo(matchJoin));
+            //NetworkClient myClient = new NetworkClient();
+            //myClient.RegisterHandler(MsgType.Connect, OnConnected);
+            //myClient.Connect(new MatchInfo(matchJoin));
+            GetComponent<MyNetworkManager>().StartClient(new MatchInfo(matchJoin));
         }
         else
         {
             Debug.LogError("Join match failed");
         }
     }
-
+    
     public void OnConnected(NetworkMessage msg)
     {
         Debug.Log("Connected!");
+    }/*
+        GameObject localPlayer = Instantiate(playerPrefab);
+
+        NetworkServer.SpawnWithClientAuthority(localPlayer, msg.conn);
     }
+    */
 }
 
