@@ -240,6 +240,16 @@ public class Player : NetworkBehaviour {
         {
             Player player = identity.GetComponent<Player>();
             // TODO player-player grappling
+			// Attaching to the grappled player detaches their grapple
+			player.grapplePrefab = null;
+			player.grappleInstance = null;
+			player.pulling = false;
+			player.pivoting = false;
+			player.pivot.x = 0;
+			player.pivot.y = 0;
+			player.pivot.z = 0;
+			player.pullTime = 0;
+			player.pullForce = 0;
         }
     }
 
