@@ -8,6 +8,8 @@ public class MyNetworkManager : NetworkManager {
 
     public static MyNetworkManager instance;
 
+    public float restartTime;
+
     public void Start()
     {
         instance = this;
@@ -58,6 +60,9 @@ public class MyNetworkManager : NetworkManager {
     public void NewGame()
     {
         //Network.Disconnect();
+
+        restartTime = Time.time;
+
         Debug.Log("New game!");
         foreach(Player player in Player.players)
         {

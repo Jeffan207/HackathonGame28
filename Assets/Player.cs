@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
+using System;
 
 public class Player : NetworkBehaviour {
+
+    public Grapple grapplePrefab;
+    private Grapple grappleInstance;
 
     public static List<Player> players;
     public static Player localPlayer;
@@ -39,6 +43,15 @@ public class Player : NetworkBehaviour {
     public MeshRenderer myRenderer;
 
     public GameObject deathPrefab;
+
+    private bool pivoting;
+    private bool pulling;
+    private Vector3 pivot;
+    private float angularMomentum;
+    private float grappleTime;
+    public float pullTime = 2;
+    private float wireLength;
+    public float pullForce = 2000;
 
     private Rigidbody2D rb;
 
@@ -89,38 +102,109 @@ public class Player : NetworkBehaviour {
             {
                 if (Input.GetMouseButtonDown(0))
                 {
-                    currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
-                    currentAcceleration = acceleration;
+                    if(grappleInstance != null)
+                    {
+                        GrappleDisconnect();
+                    }
+                    SpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
+                    //currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
+                    //currentAcceleration = acceleration;
                 }
-
-                //currentAcceleration = Mathf.Max(currentAcceleration - acceleration * Time.deltaTime, 0);
-
-                rb.AddForce(currentDirection * currentAcceleration);
-                currentAcceleration = Mathf.Lerp(currentAcceleration, 0, Time.deltaTime / 0.1f);
-
-                GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime +
-                                                     Input.GetAxis("Vertical") * Vector3.up * speed * Time.deltaTime);
-                GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
 
                 if (Input.GetButton("Jump"))
                 {
-                    CmdBounce();
+                    if (grappleInstance != null)
+                    {
+                        GrappleDisconnect();
+                    }
                 }
 
+                if (pulling)
+                {
+                    //GetComponent<Rigidbody2D>().velocity += transform.position - pivot;
+                    GetComponent<Rigidbody2D>().AddForce(-pullForce * Time.deltaTime * (transform.position - pivot).normalized);
 
+
+
+                    if (Time.time - grappleTime > pullTime)
+                    {
+                        pulling = false;
+                        pivoting = true;
+                        wireLength = (transform.position - pivot).magnitude;
+                    }
+                }
+                else if(pivoting)
+                {
+                    if((transform.position - pivot).magnitude > wireLength)
+                    {
+                        Vector3 offset = (transform.position - pivot);
+                        Vector3.ClampMagnitude(offset, wireLength);
+                        transform.position = pivot + offset;
+                    }
+
+                }
+                else
+                {
+
+
+                    //currentAcceleration = Mathf.Max(currentAcceleration - acceleration * Time.deltaTime, 0);
+
+                    rb.AddForce(currentDirection * currentAcceleration);
+                    currentAcceleration = Mathf.Lerp(currentAcceleration, 0, Time.deltaTime / 0.1f);
+
+                    GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime +
+                                                         Input.GetAxis("Vertical") * Vector3.up * speed * Time.deltaTime);
+                    GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
+
+                    if (Input.GetButton("Jump"))
+                    {
+                        CmdBounce();
+                        //CmdDisconnectGrapple();
+                    }
+                }
             }
 
             if (this.isServer)
             {
-                if (transform.position.y < penultimatePlayer.transform.position.y - Camera.main.orthographicSize)
+                if (Time.time - MyNetworkManager.instance.restartTime > 3)
                 {
-                    CmdLose();
-                    alive = false;
+                    if (transform.position.y < penultimatePlayer.transform.position.y - Camera.main.orthographicSize)
+                    {
+                        CmdLose();
+                        alive = false;
+                    }
                 }
             }
         }
     }
     
+    private void SpawnGrapple(Vector3 direction)
+    {
+        grappleInstance = Instantiate(grapplePrefab);
+        grappleInstance.transform.position = this.transform.position;
+        grappleInstance.myPlayer = this;
+        grappleInstance.Fire(direction);
+    }
+
+    internal void GrappleConnect(Vector3 position)
+    {
+        grappleTime = Time.time;
+        pivot = position;
+        pivoting = true;
+        pulling = true;
+        angularMomentum = (transform.position - position).magnitude * rb.velocity.magnitude;
+    }
+
+    private void GrappleDisconnect()
+    {
+        Debug.Log("disconnect");
+        pulling = false;
+        pivoting = false;
+        GetComponent<HingeJoint2D>().enabled = false;
+
+        Destroy(grappleInstance.gameObject);
+    }
+
     public void OnGUI()
     {
         GUI.Label(new Rect(100, 100, 100, 20), penultimatePlayer.transform.position.y.ToString());
