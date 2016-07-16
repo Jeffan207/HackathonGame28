@@ -33,12 +33,6 @@ public class MatchmakingManager : MonoBehaviour {
 		networkMatch.ListMatches(0, 20, "", OnMatchList);
 	}
 
-	public void leaveGame() {
-		//This really doesn't work but its basically a placeholder until someone figures out how to do it right.
-		SceneManager.LoadScene ("menu");
-	}
-
-
     void OnGUI()
     {
         if (Debug.isDebugBuild)

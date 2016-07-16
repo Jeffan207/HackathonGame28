@@ -8,7 +8,9 @@ public class MyNetworkManager : NetworkManager {
 
     public static MyNetworkManager instance;
 
-    public float restartTime;
+    public LevelGenerator levelGenerator;
+
+    internal float restartTime;
 
     public void Start()
     {
@@ -47,6 +49,7 @@ public class MyNetworkManager : NetworkManager {
     {
         base.OnStartHost();
         Debug.Log("OnStartHost");
+        levelGenerator.StartNewRound();
     }
     public new void OnMatchCreate(CreateMatchResponse matchInfo)
     {
@@ -67,6 +70,21 @@ public class MyNetworkManager : NetworkManager {
         foreach(Player player in Player.players)
         {
             player.Respawn();
+        }
+
+        levelGenerator.StartNewRound();
+    }
+
+    public void LeaveGame()
+    {
+        //Network.Disconnect();
+        if (Network.isClient)
+        {
+            this.StopClient();
+        }
+        if (Network.isServer)
+        {
+            this.StopHost();
         }
     }
 }

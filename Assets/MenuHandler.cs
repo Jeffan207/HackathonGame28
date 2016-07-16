@@ -6,12 +6,18 @@ using UnityEngine.Networking.Match;
 
 public class MenuHandler : MonoBehaviour {
 	public MatchmakingManager matchmakingManager;
+	public MyNetworkManager networkManager;
 
 	public GameObject mainMenuPanel;
 	public GameObject pauseMenuPanel;
 	public GameObject hud;
 
-	public void createGame() {
+    public void Start()
+    {
+        mainMenuPanel.SetActive(true);
+    }
+
+    public void createGame() {
 		matchmakingManager.createGame ();
 		mainMenuPanel.SetActive(false);
 		hud.SetActive (true);
@@ -24,8 +30,11 @@ public class MenuHandler : MonoBehaviour {
 
 	public void leaveGame() {
 		Debug.Log ("Got here");
-		matchmakingManager.leaveGame ();
-	}
+        mainMenuPanel.SetActive(true);
+		pauseMenuPanel.SetActive (false);
+		hud.SetActive (false);
+        networkManager.LeaveGame();
+    }
 
 	public void enablePauseMenu() {
 		if (!pauseMenuPanel.activeSelf) {
