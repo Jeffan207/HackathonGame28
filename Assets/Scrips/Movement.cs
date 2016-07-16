@@ -18,6 +18,7 @@ public class Movement : MonoBehaviour {
 			rb.velocity = Vector2.zero;
 			playerClick = Input.mousePosition;
 			Vector3 target = Camera.main.ScreenToWorldPoint (playerClick);
+			Debug.Log (target);
 			rb.AddForce (target * speed);
 
 			//rb.AddForce (target );

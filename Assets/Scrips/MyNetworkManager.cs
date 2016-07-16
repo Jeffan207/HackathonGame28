@@ -28,6 +28,12 @@ public class MyNetworkManager : NetworkManager {
         base.OnClientConnect(conn);
         Debug.LogFormat("OnClientConnect {0}", conn.address);
     }
+
+	public override void OnClientDisconnect(NetworkConnection conn) {
+		base.OnClientDisconnect (conn);
+		Debug.LogFormat ("OnClientDisconnect {0}", conn.address);
+	}
+
     public override void OnServerConnect(NetworkConnection conn)
     {
         base.OnServerConnect(conn);
