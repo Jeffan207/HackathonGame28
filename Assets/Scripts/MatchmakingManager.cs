@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Networking.Match;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class MatchmakingManager : MonoBehaviour {
 
@@ -32,6 +33,9 @@ public class MatchmakingManager : MonoBehaviour {
 		networkMatch.ListMatches(0, 20, "", OnMatchList);
 	}
 
+	public void leaveGame() {
+		SceneManager.LoadScene ("menu");
+	}
 
 
     void OnGUI()
@@ -69,7 +73,7 @@ public class MatchmakingManager : MonoBehaviour {
             Debug.Log("Create match succeeded");
             matchCreated = true;
             Utility.SetAccessTokenForNetwork(matchResponse.networkId, new NetworkAccessToken(matchResponse.accessTokenString));
-            //NetworkServer.Listen(new MatchInfo(matchResponse), 9000);
+            NetworkServer.Listen(new MatchInfo(matchResponse), 9000);
             GetComponent<MyNetworkManager>().StartHost(new MatchInfo(matchResponse));
         }
         else
