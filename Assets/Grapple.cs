@@ -7,11 +7,20 @@ public class Grapple : NetworkBehaviour
 {
     public Player myPlayer;
 
+    private LineRenderer lineRenderer;
+
     public float speed;
 
     public void Start()
     {
         Debug.LogFormat("New grapple (is server = {0})", this.isServer);
+        lineRenderer = GetComponent<LineRenderer>();
+    }
+
+    void Update()
+    {
+        lineRenderer.SetPosition(0, this.transform.position);
+        lineRenderer.SetPosition(1, myPlayer.transform.position);
     }
 
     [ClientRpc]
@@ -29,6 +38,7 @@ public class Grapple : NetworkBehaviour
             if (this.isServer)
             {
                 myPlayer.RpcGrappleConnect(transform.position);
+                lineRenderer.enabled = false;
             }
         }
         // check for player layer (make sure we aren't hitting our own player)
@@ -39,6 +49,7 @@ public class Grapple : NetworkBehaviour
             if (this.isServer)
             {
                 myPlayer.RpcGrapplePlayer(collision.gameObject.GetComponent<NetworkIdentity>());
+                lineRenderer.enabled = false;
             }
         }
     }

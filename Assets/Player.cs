@@ -105,18 +105,67 @@ public class Player : NetworkBehaviour {
         }
     }
 
-	void Update () {
+    private bool swiping = false;
+    private bool eventSent = false;
+    private Vector2 lastPosition;
+
+    void Update () {
         if (alive)
         {
             if (this.isLocalPlayer)
             {
+                if (Input.touchCount > 0)
+                {
+                    if (Input.GetTouch(0).deltaPosition.sqrMagnitude != 0)
+                    {
+                        if (swiping == false)
+                        {
+                            swiping = true;
+                            lastPosition = Input.GetTouch(0).position;
+                            return;
+                        }
+                        else
+                        {
+                            if (!eventSent)
+                            {
+                                Vector2 direction = Input.GetTouch(0).position - lastPosition;
+                                if (direction.magnitude > 75)
+                                {
+                                    Debug.Log("Swipe detected");
+                                    eventSent = true;
+                                    //CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
+
+                                    astronautSoundSource.clip = grappleHitSound;
+                                    astronautSoundSource.pitch = Random.Range(.8f, 1.2f);
+                                    astronautSoundSource.Play();
+                                    CmdSpawnGrapple(3 * (Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position) - Camera.main.ScreenToWorldPoint(lastPosition)));
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        if(swiping)
+                        {
+                            swiping = false;
+                            eventSent = false;
+                        }
+                    }
+                }
+                else
+                {
+                    if (swiping && !eventSent)
+                    {
+                        if (grappleInstance != null)
+                        {
+                            CmdGrappleDisconnect();
+                        }
+                    }
+                }
                 // TODO swipe to grapple, tap to disconnect grapple
-                if (Input.GetMouseButtonDown(0))
+                if (Debug.isDebugBuild && Input.GetMouseButtonDown(0))
                 {
 					this.gameObject.GetComponentInChildren <SpriteRenderer>().sprite = moveSprite;
-					astronautSoundSource.clip = grappleHitSound;
-					astronautSoundSource.pitch = Random.Range (.8f, 1.2f);
-					astronautSoundSource.Play ();
+
                     // tap to shoot grapple
                     CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
 

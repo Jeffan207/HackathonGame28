@@ -13,7 +13,7 @@ public class LevelGenerator : NetworkBehaviour {
 
     private List<Module> currentModules;
 
-    private int moduleLead = 4;
+    private int moduleLead = 8;
 
     void Awake()
     {
@@ -105,7 +105,7 @@ public class LevelGenerator : NetworkBehaviour {
             Module newModule = Instantiate(straightModules[straightIndex]);
             newModule.transform.position = latestModule.transform.position + latestModule.outVector * moduleWidth;
             currentModules.Add(newModule);
-            latestModule.playersEnter -= AddNewModule;
+            //latestModule.playersEnter -= AddNewModule;
             newModule.playersEnter += AddNewModule;
 
             //up
