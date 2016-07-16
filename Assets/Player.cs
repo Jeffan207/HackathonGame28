@@ -67,7 +67,7 @@ public class Player : NetworkBehaviour {
 
     [Header("")]
     public GameObject deathPrefab;
-    public MeshRenderer myRenderer;
+    public SpriteRenderer myRenderer;
 
     // rope management
     public ChainMaster chainPrefab;
@@ -187,8 +187,8 @@ public class Player : NetworkBehaviour {
                 {
                     if (transform.position.y < penultimatePlayer.transform.position.y - Camera.main.orthographicSize)
                     {
-                        //CmdLose();
-                        //alive = false;
+                        CmdLose();
+                        alive = false;
                     }
                 }
             }
