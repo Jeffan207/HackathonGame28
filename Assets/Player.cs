@@ -144,11 +144,17 @@ public class Player : NetworkBehaviour {
                         }
                     }
                     else {
+                        if (!eventSent && grappleInstance != null)
+                        {
+                            CmdGrappleDisconnect();
+                        }
+                        /*
                         if(swiping)
                         {
                             swiping = false;
                             eventSent = false;
                         }
+                        */
                     }
                 }
                 else
@@ -160,6 +166,8 @@ public class Player : NetworkBehaviour {
                             CmdGrappleDisconnect();
                         }
                     }
+                    swiping = false;
+                    eventSent = false;
                 }
                 // TODO swipe to grapple, tap to disconnect grapple
                 if (Debug.isDebugBuild && Input.GetMouseButtonDown(0))

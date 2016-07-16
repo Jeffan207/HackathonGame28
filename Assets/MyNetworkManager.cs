@@ -85,7 +85,6 @@ public class MyNetworkManager : NetworkManager {
 
     public void LeaveGame()
     {
-        //Network.Disconnect();
         if (Network.isClient)
         {
             this.StopClient();
@@ -94,6 +93,7 @@ public class MyNetworkManager : NetworkManager {
         {
             this.StopHost();
         }
+        Network.Disconnect();
     }
 
     public void Update()
