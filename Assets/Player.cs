@@ -8,7 +8,10 @@ public class Player : NetworkBehaviour {
     public static Player localPlayer;
 
     public float speed = 2;
-    
+    public float acceleration = 2;
+    private float currentAcceleration;
+    private Vector3 currentDirection;
+
     public float maxSpeed = 20;
 
     public float minRadius = 1;
@@ -17,6 +20,14 @@ public class Player : NetworkBehaviour {
     public MeshRenderer myRenderer;
 
     public GameObject deathPrefab;
+
+    private Rigidbody2D rb;
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        //target = Camera.main.ScreenToWorldPoint(playerClick);
+    }
 
     public override void OnStartServer()
     {
@@ -56,6 +67,17 @@ public class Player : NetworkBehaviour {
         {
             if (this.isLocalPlayer)
             {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
+                    currentAcceleration = acceleration;
+                }
+
+                //currentAcceleration = Mathf.Max(currentAcceleration - acceleration * Time.deltaTime, 0);
+
+                rb.AddForce(currentDirection * currentAcceleration);
+                currentAcceleration = Mathf.Lerp(currentAcceleration, 0, Time.deltaTime / 0.1f);
+
                 GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime +
                                                      Input.GetAxis("Vertical") * Vector3.up * speed * Time.deltaTime);
                 GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
@@ -64,6 +86,8 @@ public class Player : NetworkBehaviour {
                 {
                     CmdBounce();
                 }
+
+
             }
 
             if (this.hasAuthority)
