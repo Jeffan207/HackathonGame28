@@ -7,6 +7,25 @@ public class Player : NetworkBehaviour {
     public static List<Player> players;
     public static Player localPlayer;
 
+    public static Player penultimatePlayer
+    {
+        get
+        {
+            if(players.Count == 0)
+            {
+                return null;
+            }
+            if(players.Count == 1)
+            {
+                return players[0];
+            }
+            players.Sort(delegate (Player a, Player b) {
+                return a.transform.position.y.CompareTo(b.transform.position.y);
+            });
+            return players[players.Count - 1];
+        }
+    }
+
     public float speed = 2;
     public float acceleration = 2;
     private float currentAcceleration;
@@ -43,6 +62,7 @@ public class Player : NetworkBehaviour {
             players = new List<Player>();
         }
         players.Add(this);
+        Debug.LogFormat("Number of players: {0}", players.Count);
 
         alive = true;
 
@@ -90,9 +110,9 @@ public class Player : NetworkBehaviour {
 
             }
 
-            if (this.hasAuthority)
+            if (this.isServer)
             {
-                if (transform.position.y < -5)
+                if (transform.position.y < penultimatePlayer.transform.position.y - Camera.main.orthographicSize)
                 {
                     CmdLose();
                     alive = false;
@@ -101,6 +121,11 @@ public class Player : NetworkBehaviour {
         }
     }
     
+    public void OnGUI()
+    {
+        GUI.Label(new Rect(100, 100, 100, 20), penultimatePlayer.transform.position.y.ToString());
+    }
+
     [Server]
     public void Respawn()
     {
@@ -115,15 +140,15 @@ public class Player : NetworkBehaviour {
         alive = false;
 
         Debug.Log("Checking if all players are dead");
-        bool alldead = true;
+        int aliveplayers = 0;
         foreach (Player player in Player.players)
         {
             if (player.alive)
             {
-                alldead = false;
+                aliveplayers++;
             }
         }
-        if (alldead)
+        if (aliveplayers < 2)
         {
             FindObjectOfType<MyNetworkManager>().NewGame();
         }
@@ -149,6 +174,7 @@ public class Player : NetworkBehaviour {
         transform.position = Vector3.zero;
         alive = true;
         GetComponent<Rigidbody2D>().isKinematic = false;
+        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 
     [Command]

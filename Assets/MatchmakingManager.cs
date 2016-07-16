@@ -41,10 +41,12 @@ public class MatchmakingManager : MonoBehaviour {
         if (GUILayout.Button("Local Game Start"))
         {
             GetComponent<MyNetworkManager>().StartHost();
+            FindObjectOfType<Canvas>().enabled = false;
         }
         if (GUILayout.Button("Local Game Join"))
         {
             GetComponent<MyNetworkManager>().StartClient();
+            FindObjectOfType<Canvas>().enabled = false;
         }
 
         if (matchList.Count > 0)

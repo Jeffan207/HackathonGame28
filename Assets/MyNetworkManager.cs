@@ -6,6 +6,12 @@ using System.Collections.Generic;
 
 public class MyNetworkManager : NetworkManager {
 
+    public static MyNetworkManager instance;
+
+    public void Start()
+    {
+        instance = this;
+    }
 
     public new void OnMatchJoined(JoinMatchResponse matchInfo)
     {
