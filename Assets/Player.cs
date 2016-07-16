@@ -53,6 +53,8 @@ public class Player : NetworkBehaviour {
     public float pullTime = 2;
     public float pullForce = 2000;
 
+    public float grappleSpeed = 5;
+
     // death properties
     [SyncVar]
     internal bool alive;
@@ -138,7 +140,7 @@ public class Player : NetworkBehaviour {
                                     astronautSoundSource.clip = grappleHitSound;
                                     astronautSoundSource.pitch = Random.Range(.8f, 1.2f);
                                     astronautSoundSource.Play();
-                                    CmdSpawnGrapple(3 * (Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position) - Camera.main.ScreenToWorldPoint(lastPosition)));
+                                    CmdSpawnGrapple(grappleSpeed * (Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position) - Camera.main.ScreenToWorldPoint(lastPosition)));
                                 }
                             }
                         }
@@ -148,13 +150,6 @@ public class Player : NetworkBehaviour {
                         {
                             CmdGrappleDisconnect();
                         }
-                        /*
-                        if(swiping)
-                        {
-                            swiping = false;
-                            eventSent = false;
-                        }
-                        */
                     }
                 }
                 else
@@ -170,17 +165,19 @@ public class Player : NetworkBehaviour {
                     eventSent = false;
                 }
                 // TODO swipe to grapple, tap to disconnect grapple
-                if (Debug.isDebugBuild && Input.GetMouseButtonDown(0))
+                if ((Debug.isDebugBuild || Application.platform != RuntimePlatform.Android) && Input.GetMouseButtonDown(0))
                 {
-					this.gameObject.GetComponentInChildren <SpriteRenderer>().sprite = moveSprite;
+                    if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+                    {
+                        this.gameObject.GetComponentInChildren<SpriteRenderer>().sprite = moveSprite;
 
-                    // tap to shoot grapple
-                    CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
+                        // tap to shoot grapple
+                        CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
 
-                    // tap to move
-                    currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
-                    currentAcceleration = tapToMoveAcceleration;
-				
+                        // tap to move
+                        currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
+                        currentAcceleration = tapToMoveAcceleration;
+                    }
                 }
 
                 // press space to drop grapple
@@ -374,13 +371,16 @@ public class Player : NetworkBehaviour {
     void RpcRespawn()
     {
         Debug.Log("Player respawned");
-        myRenderer.enabled = true;
-        transform.position = Vector3.zero + Random.Range(-1f, 1f) * Vector3.up + Random.Range(-1f, 1f) * Vector3.right;
-        alive = true;
-        pulling = false;
-        pivoting = false;
-        GetComponent<Rigidbody2D>().isKinematic = false;
-        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        if (this.hasAuthority)
+        {
+            myRenderer.enabled = true;
+            transform.position = Vector3.zero + Random.Range(-1f, 1f) * Vector3.up + Random.Range(-1f, 1f) * Vector3.right;
+            alive = true;
+            pulling = false;
+            pivoting = false;
+            GetComponent<Rigidbody2D>().isKinematic = false;
+            GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        }
     }
 
 
@@ -415,6 +415,17 @@ public class Player : NetworkBehaviour {
         alive = false;
         GetComponent<Rigidbody2D>().isKinematic = true;
         GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+
+        if (grappleInstance != null)
+        {
+            Destroy(grappleInstance.gameObject);
+        }
+        if (chainInstance != null)
+        {
+            Destroy(chainInstance.gameObject);
+        }
+        pulling = false;
+        pivoting = false;
     }
 
 

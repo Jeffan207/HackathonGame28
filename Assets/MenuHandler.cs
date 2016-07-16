@@ -15,6 +15,8 @@ public class MenuHandler : MonoBehaviour {
     public void Start()
     {
         mainMenuPanel.SetActive(true);
+		pauseMenuPanel.SetActive (false);
+		hud.SetActive (false);
     }
 
     public void createGame() {
