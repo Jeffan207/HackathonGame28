@@ -283,6 +283,7 @@ public class Player : NetworkBehaviour {
     private void RpcSpawnGrapple(NetworkIdentity grapple)
     {
         grappleInstance = grapple.GetComponent<Grapple>();
+        grappleInstance.myPlayer = this;
         if(chainInstance != null)
         {
             Destroy(chainInstance.gameObject);
