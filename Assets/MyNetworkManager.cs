@@ -2,9 +2,10 @@
 using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Networking.Match;
-using System.Collections;
+using System.Collections.Generic;
 
 public class MyNetworkManager : NetworkManager {
+
 
     public new void OnMatchJoined(JoinMatchResponse matchInfo)
     {
@@ -24,6 +25,11 @@ public class MyNetworkManager : NetworkManager {
         base.OnServerConnect(conn);
         Debug.Log("OnServerConnect");
     }
+    public override void OnServerDisconnect(NetworkConnection conn)
+    {
+        base.OnServerDisconnect(conn);
+        Debug.Log("OnServerDisconnect");
+    }
     public override void OnStartClient(NetworkClient client)
     {
         base.OnStartClient(client);
@@ -40,6 +46,16 @@ public class MyNetworkManager : NetworkManager {
         if (matchInfo.success)
         {
             StartHost(new MatchInfo(matchInfo));
+        }
+    }
+
+    public void NewGame()
+    {
+        //Network.Disconnect();
+        Debug.Log("New game!");
+        foreach(Player player in Player.players)
+        {
+            player.Respawn();
         }
     }
 }

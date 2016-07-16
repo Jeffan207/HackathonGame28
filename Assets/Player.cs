@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.Networking;
 
 public class Player : NetworkBehaviour {
+
+    public static List<Player> players;
+    public static Player localPlayer;
+
     public float speed = 2;
     
     public float maxSpeed = 20;
@@ -10,18 +14,117 @@ public class Player : NetworkBehaviour {
     public float minRadius = 1;
     public float force = 5;
 
-	void Update () {
-        if (this.isLocalPlayer)
-        {
-            GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime + 
-                                                 Input.GetAxis("Vertical")   * Vector3.up    * speed * Time.deltaTime);
-            GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
+    public MeshRenderer myRenderer;
 
-            if (Input.GetButton("Jump"))
+    public GameObject deathPrefab;
+
+    public override void OnStartServer()
+    {
+    }
+
+    [SyncVar]
+    public bool alive;
+
+    void Start()
+    {
+        if(players == null)
+        {
+            players = new List<Player>();
+        }
+        players.Add(this);
+
+        alive = true;
+
+        if(this.isLocalPlayer)
+        {
+            localPlayer = this;
+
+            if (Camera.main.GetComponent<CameraFollow>() != null)
             {
-                CmdBounce();
+                Camera.main.GetComponent<CameraFollow>().Follow(this.transform);
+            }
+            else
+            {
+                Debug.LogWarning("The main camera doesn't have a CameraFollow!");
             }
         }
+
+    }
+
+	void Update () {
+        if (alive)
+        {
+            if (this.isLocalPlayer)
+            {
+                GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime +
+                                                     Input.GetAxis("Vertical") * Vector3.up * speed * Time.deltaTime);
+                GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
+
+                if (Input.GetButton("Jump"))
+                {
+                    CmdBounce();
+                }
+            }
+
+            if (this.hasAuthority)
+            {
+                if (transform.position.y < -5)
+                {
+                    CmdLose();
+                    alive = false;
+                }
+            }
+        }
+    }
+    
+    [Server]
+    public void Respawn()
+    {
+        RpcRespawn();
+    }
+
+    [Command]
+    void CmdLose()
+    {
+        RpcLose();
+
+        alive = false;
+
+        Debug.Log("Checking if all players are dead");
+        bool alldead = true;
+        foreach (Player player in Player.players)
+        {
+            if (player.alive)
+            {
+                alldead = false;
+            }
+        }
+        if (alldead)
+        {
+            FindObjectOfType<MyNetworkManager>().NewGame();
+        }
+    }
+
+    [ClientRpc]
+    void RpcLose()
+    {
+        Debug.Log("Player lost");
+        GameObject deathEffect = Instantiate(deathPrefab);
+        deathEffect.transform.position = transform.position;
+        myRenderer.enabled = false;
+        alive = false;
+        GetComponent<Rigidbody2D>().isKinematic = true;
+        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+    }
+
+    [ClientRpc]
+    void RpcRespawn()
+    {
+        Debug.Log("Player respawned");
+        myRenderer.enabled = true;
+        transform.position = Vector3.zero;
+        alive = true;
+        GetComponent<Rigidbody2D>().isKinematic = false;
     }
 
     [Command]

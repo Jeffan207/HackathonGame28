@@ -38,6 +38,15 @@ public class MatchmakingManager : MonoBehaviour {
             networkMatch.ListMatches(0, 20, "", OnMatchList);
         }
 
+        if (GUILayout.Button("Local Game Start"))
+        {
+            GetComponent<MyNetworkManager>().StartHost();
+        }
+        if (GUILayout.Button("Local Game Join"))
+        {
+            GetComponent<MyNetworkManager>().StartClient();
+        }
+
         if (matchList.Count > 0)
         {
             GUILayout.Label("Current rooms");
