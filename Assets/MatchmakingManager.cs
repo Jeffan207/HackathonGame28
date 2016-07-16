@@ -19,24 +19,24 @@ public class MatchmakingManager : MonoBehaviour {
         ClientScene.RegisterPrefab(playerPrefab);
     }
 
+	public void createGame() {
+		CreateMatchRequest create = new CreateMatchRequest();
+		create.name = "NewRoom";
+		create.size = 4;
+		create.advertise = true;
+		create.password = "";
+		networkMatch.CreateMatch(create, OnMatchCreate);
+	}
+
+	public void joinGame() {
+		networkMatch.ListMatches(0, 20, "", OnMatchList);
+	}
+
+
+
     void OnGUI()
     {
         // You would normally not join a match you created yourself but this is possible here for demonstration purposes.
-        if (GUILayout.Button("Create Room"))
-        {
-            CreateMatchRequest create = new CreateMatchRequest();
-            create.name = "NewRoom";
-            create.size = 4;
-            create.advertise = true;
-            create.password = "";
-
-            networkMatch.CreateMatch(create, OnMatchCreate);
-        }
-
-        if (GUILayout.Button("List rooms"))
-        {
-            networkMatch.ListMatches(0, 20, "", OnMatchList);
-        }
 
         if (GUILayout.Button("Local Game Start"))
         {
