@@ -5,12 +5,9 @@ using System;
 
 public class Player : NetworkBehaviour {
 
-    public Grapple grapplePrefab;
-    private Grapple grappleInstance;
-
+    // player instance management
     public static List<Player> players;
     public static Player localPlayer;
-
     public static Player penultimatePlayer
     {
         get
@@ -26,23 +23,29 @@ public class Player : NetworkBehaviour {
             players.Sort(delegate (Player a, Player b) {
                 return a.transform.position.y.CompareTo(b.transform.position.y);
             });
-            return players[players.Count - 1];
+            return players[1];
         }
     }
 
-    public float speed = 2;
-    public float acceleration = 2;
+    // movement properties
+    [Header("Movement Properties")]
+    public float WASDAcceleration = 2000;
+    public float tapToMoveAcceleration = 80;
     private float currentAcceleration;
     private Vector3 currentDirection;
-
     public float maxSpeed = 20;
 
-    public float minRadius = 1;
-    public float force = 5;
+    private Rigidbody2D rb;
 
-    public MeshRenderer myRenderer;
+    // bounce properties
+    [Header("Bounce Properties")]
+    public float bounceMinRadius = 1;
+    public float bounceForce = 10;
 
-    public GameObject deathPrefab;
+    // grapple properties
+    [Header("Grapple Properties")]
+    public Grapple grapplePrefab;
+    private Grapple grappleInstance;
 
     private bool pivoting;
     private bool pulling;
@@ -53,20 +56,18 @@ public class Player : NetworkBehaviour {
     private float wireLength;
     public float pullForce = 2000;
 
-    private Rigidbody2D rb;
+    // death properties
+    [SyncVar]
+    internal bool alive;
+
+    [Header("")]
+    public GameObject deathPrefab;
+    public MeshRenderer myRenderer;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        //target = Camera.main.ScreenToWorldPoint(playerClick);
     }
-
-    public override void OnStartServer()
-    {
-    }
-
-    [SyncVar]
-    public bool alive;
 
     void Start()
     {
@@ -92,7 +93,6 @@ public class Player : NetworkBehaviour {
                 Debug.LogWarning("The main camera doesn't have a CameraFollow!");
             }
         }
-
     }
 
 	void Update () {
@@ -100,17 +100,22 @@ public class Player : NetworkBehaviour {
         {
             if (this.isLocalPlayer)
             {
+                // TODO swipe to grapple, tap to disconnect grapple
                 if (Input.GetMouseButtonDown(0))
                 {
+                    // tap to shoot grapple
                     if(grappleInstance != null)
                     {
                         GrappleDisconnect();
                     }
                     SpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
-                    //currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
-                    //currentAcceleration = acceleration;
+
+                    // tap to move
+                    currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
+                    currentAcceleration = tapToMoveAcceleration;
                 }
 
+                // press space to drop grapple
                 if (Input.GetButton("Jump"))
                 {
                     if (grappleInstance != null)
@@ -119,51 +124,52 @@ public class Player : NetworkBehaviour {
                     }
                 }
 
+                // pulling = true for 1 second after the grapple lands
                 if (pulling)
                 {
                     //GetComponent<Rigidbody2D>().velocity += transform.position - pivot;
                     GetComponent<Rigidbody2D>().AddForce(-pullForce * Time.deltaTime * (transform.position - pivot).normalized);
 
-
-
+                    // transition to pulling = false, pivoting = true after 1 second
                     if (Time.time - grappleTime > pullTime)
                     {
                         pulling = false;
                         pivoting = true;
+                        SpawnRope();
                         wireLength = (transform.position - pivot).magnitude;
                     }
                 }
+                // in this phase, we are constrained by a rope of a certain length
                 else if(pivoting)
                 {
+                    /*
                     if((transform.position - pivot).magnitude > wireLength)
                     {
                         Vector3 offset = (transform.position - pivot);
                         Vector3.ClampMagnitude(offset, wireLength);
                         transform.position = pivot + offset;
                     }
-
+                    */
                 }
+                // in this phase, we are free to move with WASD and be propelled by tap-to-move
                 else
                 {
-
-
-                    //currentAcceleration = Mathf.Max(currentAcceleration - acceleration * Time.deltaTime, 0);
-
-                    rb.AddForce(currentDirection * currentAcceleration);
+                    //rb.AddForce(currentDirection * currentAcceleration);
                     currentAcceleration = Mathf.Lerp(currentAcceleration, 0, Time.deltaTime / 0.1f);
 
-                    GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime +
-                                                         Input.GetAxis("Vertical") * Vector3.up * speed * Time.deltaTime);
+                    GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * WASDAcceleration * Time.deltaTime +
+                                                         Input.GetAxis("Vertical") * Vector3.up * WASDAcceleration * Time.deltaTime);
                     GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
 
+                    // press space to push away other players
                     if (Input.GetButton("Jump"))
                     {
                         CmdBounce();
-                        //CmdDisconnectGrapple();
                     }
                 }
             }
 
+            // check death
             if (this.isServer)
             {
                 if (Time.time - MyNetworkManager.instance.restartTime > 3)
@@ -178,6 +184,10 @@ public class Player : NetworkBehaviour {
         }
     }
     
+    private void SpawnRope()
+    {
+        // TODO spawn a rope between this.transform.position and this.pivot
+    }
     private void SpawnGrapple(Vector3 direction)
     {
         grappleInstance = Instantiate(grapplePrefab);
@@ -185,7 +195,6 @@ public class Player : NetworkBehaviour {
         grappleInstance.myPlayer = this;
         grappleInstance.Fire(direction);
     }
-
     internal void GrappleConnect(Vector3 position)
     {
         grappleTime = Time.time;
@@ -194,27 +203,43 @@ public class Player : NetworkBehaviour {
         pulling = true;
         angularMomentum = (transform.position - position).magnitude * rb.velocity.magnitude;
     }
-
     private void GrappleDisconnect()
     {
-        Debug.Log("disconnect");
         pulling = false;
         pivoting = false;
         GetComponent<HingeJoint2D>().enabled = false;
 
         Destroy(grappleInstance.gameObject);
     }
+    internal void GrapplePlayer(Player player)
+    {
+        // TODO player-player grappling
+        throw new NotImplementedException();
+    }
+
 
     public void OnGUI()
     {
         GUI.Label(new Rect(100, 100, 100, 20), penultimatePlayer.transform.position.y.ToString());
     }
 
+
     [Server]
     public void Respawn()
     {
         RpcRespawn();
     }
+    [ClientRpc]
+    void RpcRespawn()
+    {
+        Debug.Log("Player respawned");
+        myRenderer.enabled = true;
+        transform.position = Vector3.zero;
+        alive = true;
+        GetComponent<Rigidbody2D>().isKinematic = false;
+        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+    }
+
 
     [Command]
     void CmdLose()
@@ -237,7 +262,6 @@ public class Player : NetworkBehaviour {
             FindObjectOfType<MyNetworkManager>().NewGame();
         }
     }
-
     [ClientRpc]
     void RpcLose()
     {
@@ -250,33 +274,20 @@ public class Player : NetworkBehaviour {
         GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 
-    [ClientRpc]
-    void RpcRespawn()
-    {
-        Debug.Log("Player respawned");
-        myRenderer.enabled = true;
-        transform.position = Vector3.zero;
-        alive = true;
-        GetComponent<Rigidbody2D>().isKinematic = false;
-        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-    }
 
     [Command]
     void CmdBounce()
     {
-        Debug.Log("COMMAND Bounce");
         RpcBounce();
     }
-
     [ClientRpc]
     void RpcBounce()
     {
-        Debug.Log("CLIENTRPC Bounce");
         foreach(Player player in FindObjectsOfType<Player>())
         {
             Vector3 delta = (transform.position - player.transform.position);
-            float amount = Mathf.Max(minRadius, delta.magnitude);
-            player.GetComponent<Rigidbody2D>().AddForce(-delta.normalized * 1f/amount * force);
+            float amount = Mathf.Max(bounceMinRadius, delta.magnitude);
+            player.GetComponent<Rigidbody2D>().AddForce(-delta.normalized * 1f/amount * bounceForce);
         }
     }
 }
