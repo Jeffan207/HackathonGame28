@@ -16,10 +16,11 @@ public class Player : NetworkBehaviour {
             GetComponent<Rigidbody2D>().AddForce(Input.GetAxis("Horizontal") * Vector3.right * speed * Time.deltaTime + 
                                                  Input.GetAxis("Vertical")   * Vector3.up    * speed * Time.deltaTime);
             GetComponent<Rigidbody2D>().velocity = Vector3.ClampMagnitude(GetComponent<Rigidbody2D>().velocity, maxSpeed);
-        }
-        if(Input.GetButton("Jump"))
-        {
-            CmdBounce();
+
+            if (Input.GetButton("Jump"))
+            {
+                CmdBounce();
+            }
         }
     }
 
