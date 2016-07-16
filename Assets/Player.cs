@@ -57,6 +57,10 @@ public class Player : NetworkBehaviour {
     [SyncVar]
     internal bool alive;
 
+	//sprite properties
+	public Sprite stillSprite;
+	public Sprite moveSprite;
+
     [Header("")]
     public GameObject deathPrefab;
     public MeshRenderer myRenderer;
@@ -100,12 +104,14 @@ public class Player : NetworkBehaviour {
                 // TODO swipe to grapple, tap to disconnect grapple
                 if (Input.GetMouseButtonDown(0))
                 {
+					this.gameObject.GetComponentInChildren <SpriteRenderer>().sprite = moveSprite;
                     // tap to shoot grapple
                     CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
 
                     // tap to move
                     currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
                     currentAcceleration = tapToMoveAcceleration;
+				
                 }
 
                 // press space to drop grapple
@@ -130,6 +136,7 @@ public class Player : NetworkBehaviour {
                         pivoting = true;
                         SpawnRope();
                     }
+					this.gameObject.GetComponentInChildren <SpriteRenderer>().sprite = stillSprite;
                 }
                 // in this phase, we are constrained by a rope of a certain length
                 else if(pivoting)
