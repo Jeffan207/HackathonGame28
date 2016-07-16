@@ -3,7 +3,6 @@ using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Networking.Match;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 
 public class MatchmakingManager : MonoBehaviour {
 
@@ -31,16 +30,6 @@ public class MatchmakingManager : MonoBehaviour {
 
 	public void joinGame() {
 		networkMatch.ListMatches(0, 20, "", OnMatchList);
-	}
-
-	public void leaveGame() {
-		SceneManager.LoadScene ("menu");
-	}
-
-	public void CancelMatch(BasicResponse cancel) {
-		if (cancel.success) {
-			print ("match cancelled");
-		}
 	}
 
 
