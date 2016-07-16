@@ -61,6 +61,10 @@ public class Player : NetworkBehaviour {
     public GameObject deathPrefab;
     public MeshRenderer myRenderer;
 
+    // rope management
+    public ChainMaster chainPrefab;
+    private ChainMaster chainInstance;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -124,11 +128,11 @@ public class Player : NetworkBehaviour {
                     GetComponent<Rigidbody2D>().AddForce(-pullForce * Time.deltaTime * (transform.position - pivot).normalized);
 
                     // transition to pulling = false, pivoting = true after 1 second
-                    if (Time.time - grappleTime > pullTime)
+                    //if (rb.velocity.magnitude > 1.5f && Mathf.Abs(Vector2.Dot(rb.velocity.normalized, (transform.position - pivot).normalized)) < 0.2)//  
+                    if(Time.time - grappleTime > pullTime)
                     {
                         pulling = false;
                         pivoting = true;
-                        SpawnRope();
                     }
                 }
                 // in this phase, we are constrained by a rope of a certain length
@@ -168,8 +172,8 @@ public class Player : NetworkBehaviour {
                 {
                     if (transform.position.y < penultimatePlayer.transform.position.y - Camera.main.orthographicSize)
                     {
-                        CmdLose();
-                        alive = false;
+                        //CmdLose();
+                        //alive = false;
                     }
                 }
             }
@@ -178,7 +182,12 @@ public class Player : NetworkBehaviour {
     
     private void SpawnRope()
     {
-        // TODO spawn a rope between this.transform.position and this.pivot
+        Debug.Log("Trying to spawn rope");
+        if (grappleInstance != null)
+        {
+            chainInstance = Instantiate(chainPrefab);
+            chainInstance.CreateChain(grappleInstance.transform, this.transform);
+        }
     }
 
     [Command]
@@ -186,14 +195,26 @@ public class Player : NetworkBehaviour {
     {
         if (grappleInstance != null)
         {
-            NetworkServer.Destroy(grappleInstance.gameObject);
+            Destroy(grappleInstance.gameObject);
         }
+
         grappleInstance = Instantiate(grapplePrefab);
         grappleInstance.transform.position = this.transform.position;
         grappleInstance.myPlayer = this;
 
         NetworkServer.Spawn(grappleInstance.gameObject);
         grappleInstance.RpcFire(direction);
+
+        RpcSpawnGrapple(grappleInstance.GetComponent<NetworkIdentity>());
+    }
+    [ClientRpc]
+    private void RpcSpawnGrapple(NetworkIdentity grapple)
+    {
+        grappleInstance = grapple.GetComponent<Grapple>();
+        if(chainInstance != null)
+        {
+            Destroy(chainInstance.gameObject);
+        }
     }
 
     [Command]
@@ -211,7 +232,15 @@ public class Player : NetworkBehaviour {
         pulling = false;
         pivoting = false;
 
-        Destroy(grappleInstance.gameObject);
+        if (chainInstance != null)
+        {
+            Debug.Log("Destroying chain");
+            Destroy(chainInstance.gameObject);
+        }
+        if (grappleInstance != null)
+        {
+            Destroy(grappleInstance.gameObject);
+        }
     }
 
     [ClientRpc]
@@ -225,6 +254,12 @@ public class Player : NetworkBehaviour {
             pivoting = true;
             pulling = true;
         }
+
+        if (chainInstance != null)
+        {
+            Destroy(chainInstance.gameObject);
+        }
+        SpawnRope();
     }
     [ClientRpc]
     internal void RpcGrapplePlayer(NetworkIdentity identity)

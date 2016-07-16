@@ -8,13 +8,21 @@ public class MyNetworkManager : NetworkManager {
 
     public static MyNetworkManager instance;
 
-    public LevelGenerator levelGenerator;
+    public LevelGenerator levelGeneratorPrefab;
+    private LevelGenerator levelGenerator;
 
     internal float restartTime;
 
     public void Start()
     {
         instance = this;
+    }
+
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        Debug.Log("OnStartServer");
     }
 
     public new void OnMatchJoined(JoinMatchResponse matchInfo)
@@ -49,7 +57,6 @@ public class MyNetworkManager : NetworkManager {
     {
         base.OnStartHost();
         Debug.Log("OnStartHost");
-        levelGenerator.StartNewRound();
     }
     public new void OnMatchCreate(CreateMatchResponse matchInfo)
     {
@@ -85,6 +92,19 @@ public class MyNetworkManager : NetworkManager {
         if (Network.isServer)
         {
             this.StopHost();
+        }
+    }
+
+    public void Update()
+    {
+        if (NetworkServer.active)
+        {
+            if (levelGenerator == null)
+            {
+                levelGenerator = Instantiate(levelGeneratorPrefab);
+                NetworkServer.Spawn(levelGenerator.gameObject);
+                levelGenerator.StartNewRound();
+            }
         }
     }
 }

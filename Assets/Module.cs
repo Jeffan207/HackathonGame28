@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System;
 
-public class Module : MonoBehaviour {
+public class Module : NetworkBehaviour {
 
     //straight: in bottom, out top
     //  corner: in bottom, out right
@@ -49,34 +50,51 @@ public class Module : MonoBehaviour {
 
     public void PointOutUp(bool fromRight)
     {
+        outvector = Vector3.up;
+        RpcPointOutUp(fromRight);
+    }
+    //[ClientRpc]
+    public void RpcPointOutUp(bool fromRight)
+    {
         if (corner)
         {
             RotateCounterClockwise();
             if(fromRight)
             {
-                transform.localScale = new Vector3(1, -1, 1);
+                transform.rotation = Quaternion.AngleAxis(180, Vector3.up) * transform.rotation;
+                //transform.localScale = new Vector3(1, -1, 1);
             }
         }
-        outvector = Vector3.up;
     }
     public void PointOutRight()
+    {
+        outvector = Vector3.right;
+        RpcPointOutRight();
+    }
+    //[ClientRpc]
+    public void RpcPointOutRight()
     {
         if (!corner)
         {
             RotateClockwise();
         }
-        outvector = Vector3.right;
     }
     public void PointOutLeft()
     {
+        outvector = Vector3.left;
+        RpcPointOutLeft();
+    }
+    //[ClientRpc]
+    public void RpcPointOutLeft()
+    {
         if (corner)
         {
-            transform.localScale = new Vector3(-1, 1, 1);
+            transform.rotation = Quaternion.AngleAxis(180, Vector3.up) * transform.rotation;
+            //transform.localScale = new Vector3(-1, 1, 1);
         }
         else
         {
             RotateCounterClockwise();
         }
-        outvector = Vector3.left;
     }
 }
