@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Networking.Match;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class MatchmakingManager : MonoBehaviour {
 
@@ -32,6 +33,10 @@ public class MatchmakingManager : MonoBehaviour {
 		networkMatch.ListMatches(0, 20, "", OnMatchList);
 	}
 
+	public void leaveGame() {
+		//This really doesn't work but its basically a placeholder until someone figures out how to do it right.
+		SceneManager.LoadScene ("menu");
+	}
 
 
     void OnGUI()
