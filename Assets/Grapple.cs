@@ -1,14 +1,21 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System;
 
-public class Grapple : MonoBehaviour
+public class Grapple : NetworkBehaviour
 {
     public Player myPlayer;
 
     public float speed;
 
-    internal void Fire(Vector3 direction)
+    public void Start()
+    {
+        Debug.LogFormat("New grapple (is server = {0})", this.isServer);
+    }
+
+    [ClientRpc]
+    internal void RpcFire(Vector3 direction)
     {
         GetComponent<Rigidbody2D>().velocity = direction * speed;
     }
@@ -19,14 +26,20 @@ public class Grapple : MonoBehaviour
         if (collision.gameObject.layer == 8)
         {
             GetComponent<Rigidbody2D>().isKinematic = true;
-            myPlayer.GrappleConnect(transform.position);
+            if (this.isServer)
+            {
+                myPlayer.RpcGrappleConnect(transform.position);
+            }
         }
         // check for player layer (make sure we aren't hitting our own player)
         if (collision.gameObject.layer == 10 && collision.gameObject.GetComponent<Player>() != null && !collision.gameObject.GetComponent<Player>().Equals(myPlayer))
         {
             GetComponent<Rigidbody2D>().isKinematic = true;
             transform.SetParent(collision.gameObject.transform);
-            myPlayer.GrapplePlayer(collision.gameObject.GetComponent<Player>());
+            if (this.isServer)
+            {
+                myPlayer.RpcGrapplePlayer(collision.gameObject.GetComponent<NetworkIdentity>());
+            }
         }
     }
 }

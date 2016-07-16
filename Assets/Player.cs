@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
-using System;
 
 public class Player : NetworkBehaviour {
 
@@ -50,10 +49,8 @@ public class Player : NetworkBehaviour {
     private bool pivoting;
     private bool pulling;
     private Vector3 pivot;
-    private float angularMomentum;
     private float grappleTime;
     public float pullTime = 2;
-    private float wireLength;
     public float pullForce = 2000;
 
     // death properties
@@ -104,11 +101,7 @@ public class Player : NetworkBehaviour {
                 if (Input.GetMouseButtonDown(0))
                 {
                     // tap to shoot grapple
-                    if(grappleInstance != null)
-                    {
-                        GrappleDisconnect();
-                    }
-                    SpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
+                    CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
 
                     // tap to move
                     currentDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
@@ -120,7 +113,7 @@ public class Player : NetworkBehaviour {
                 {
                     if (grappleInstance != null)
                     {
-                        GrappleDisconnect();
+                        CmdGrappleDisconnect();
                     }
                 }
 
@@ -136,7 +129,6 @@ public class Player : NetworkBehaviour {
                         pulling = false;
                         pivoting = true;
                         SpawnRope();
-                        wireLength = (transform.position - pivot).magnitude;
                     }
                 }
                 // in this phase, we are constrained by a rope of a certain length
@@ -188,33 +180,60 @@ public class Player : NetworkBehaviour {
     {
         // TODO spawn a rope between this.transform.position and this.pivot
     }
-    private void SpawnGrapple(Vector3 direction)
+
+    [Command]
+    private void CmdSpawnGrapple(Vector3 direction)
     {
+        if (grappleInstance != null)
+        {
+            NetworkServer.Destroy(grappleInstance.gameObject);
+        }
         grappleInstance = Instantiate(grapplePrefab);
         grappleInstance.transform.position = this.transform.position;
         grappleInstance.myPlayer = this;
-        grappleInstance.Fire(direction);
+
+        NetworkServer.Spawn(grappleInstance.gameObject);
+        grappleInstance.RpcFire(direction);
     }
-    internal void GrappleConnect(Vector3 position)
+
+    [Command]
+    private void CmdGrappleDisconnect()
     {
-        grappleTime = Time.time;
-        pivot = position;
-        pivoting = true;
-        pulling = true;
-        angularMomentum = (transform.position - position).magnitude * rb.velocity.magnitude;
+        RpcGrappleDisconnect();
+    }
+    [ClientRpc]
+    private void RpcGrappleDisconnect()
+    {
+        GrappleDisconnect();
     }
     private void GrappleDisconnect()
     {
         pulling = false;
         pivoting = false;
-        GetComponent<HingeJoint2D>().enabled = false;
 
         Destroy(grappleInstance.gameObject);
     }
-    internal void GrapplePlayer(Player player)
+
+    [ClientRpc]
+    internal void RpcGrappleConnect(Vector3 position)
     {
-        // TODO player-player grappling
-        throw new NotImplementedException();
+        if (this.hasAuthority)
+        {
+            Debug.Log("Grapple connected");
+            grappleTime = Time.time;
+            pivot = position;
+            pivoting = true;
+            pulling = true;
+        }
+    }
+    [ClientRpc]
+    internal void RpcGrapplePlayer(NetworkIdentity identity)
+    {
+        if (this.hasAuthority)
+        {
+            Player player = identity.GetComponent<Player>();
+            // TODO player-player grappling
+        }
     }
 
 
@@ -234,8 +253,10 @@ public class Player : NetworkBehaviour {
     {
         Debug.Log("Player respawned");
         myRenderer.enabled = true;
-        transform.position = Vector3.zero;
+        transform.position = Vector3.zero + Random.Range(-1f, 1f) * Vector3.up + Random.Range(-1f, 1f) * Vector3.right;
         alive = true;
+        pulling = false;
+        pivoting = false;
         GetComponent<Rigidbody2D>().isKinematic = false;
         GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
