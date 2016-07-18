@@ -1,15 +1,28 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System;
 
 public class ChainMaster : MonoBehaviour {
     Transform at;
     Transform bt;
 
-    public void CreateChain(Transform grapple, Transform player)
+    private bool chainBuilt;
+
+    public void CreateChain(Transform grapple, Transform player, Vector3 grapplePosition)
     {
-        GetComponent<Chain>().A.transform.position = grapple.position;
+        if (grapple == null)
+        {
+            Debug.LogWarning("in CreateChain(), grapple reference is null");
+        }
+        if (player == null)
+        {
+            Debug.LogWarning("in CreateChain(), player reference is null");
+        }
+        
+        GetComponent<Chain>().A.transform.position = grapplePosition;
         GetComponent<Chain>().B.transform.position = player.position;
-        GetComponent<Chain>().rebuildRope();
+
+        RebuildChain();
+
         at = grapple;
         bt = player;
     }
@@ -20,6 +33,21 @@ public class ChainMaster : MonoBehaviour {
         {
             GetComponent<Chain>().A.transform.position = at.position;
             GetComponent<Chain>().B.transform.position = bt.position;
+
+            if(!chainBuilt)
+            {
+                RebuildChain();
+            }
         }
+    }
+
+    internal void RebuildChain()
+    {
+        try
+        {
+            GetComponent<Chain>().rebuildRope();
+            chainBuilt = true;
+        }
+        catch (ArgumentOutOfRangeException) { }
     }
 }

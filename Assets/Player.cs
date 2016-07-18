@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 using UnityEngine.Networking;
 
 public class Player : NetworkBehaviour {
@@ -55,17 +56,26 @@ public class Player : NetworkBehaviour {
 
     public float grappleSpeed = 5;
 
+    private float grappleLength;
+    private float visualChainLength;
+
+    private float lastTapTime;
+    public float maxTimeForDoubleTap = 0.3f;
+    private bool hasReleasedSinceLastTap;
+    private bool hasDoubleTapped;
     // death properties
     [SyncVar]
     internal bool alive;
+    private float lastRespawn;
 
-	//sprite properties
-	public Sprite stillSprite;
+    //sprite properties
+    public Sprite stillSprite;
 	public Sprite moveSprite;
 
 	//sound effects
 	public AudioClip grappleHitSound;
-	private AudioSource astronautSoundSource;
+	public AudioClip collisionSound;
+    private AudioSource astronautSoundSource;
 
     [Header("")]
     public GameObject deathPrefab;
@@ -138,7 +148,7 @@ public class Player : NetworkBehaviour {
                                     //CmdSpawnGrapple(Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
 
                                     astronautSoundSource.clip = grappleHitSound;
-                                    astronautSoundSource.pitch = Random.Range(.8f, 1.2f);
+                                    astronautSoundSource.pitch = UnityEngine.Random.Range(.8f, 1.2f);
                                     astronautSoundSource.Play();
                                     CmdSpawnGrapple(grappleSpeed * (Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position) - Camera.main.ScreenToWorldPoint(lastPosition)));
                                 }
@@ -148,7 +158,16 @@ public class Player : NetworkBehaviour {
                     else {
                         if (!eventSent && grappleInstance != null)
                         {
+                            lastTapTime = Time.time;
+                            hasReleasedSinceLastTap = false;
                             CmdGrappleDisconnect();
+                        }
+                        else if (Time.time - lastTapTime < maxTimeForDoubleTap &&  
+                                    hasReleasedSinceLastTap && 
+                                    !hasDoubleTapped)
+                        {
+                            CmdAntiWall();
+                            hasDoubleTapped = true;
                         }
                     }
                 }
@@ -158,11 +177,18 @@ public class Player : NetworkBehaviour {
                     {
                         if (grappleInstance != null)
                         {
+                            lastTapTime = Time.time;
                             CmdGrappleDisconnect();
                         }
                     }
                     swiping = false;
                     eventSent = false;
+                    hasReleasedSinceLastTap = true;
+
+                    if (Time.time - lastTapTime > maxTimeForDoubleTap)
+                    {
+                        hasDoubleTapped = false;
+                    }
                 }
                 // TODO swipe to grapple, tap to disconnect grapple
                 if ((Debug.isDebugBuild || Application.platform != RuntimePlatform.Android) && Input.GetMouseButtonDown(0))
@@ -192,12 +218,27 @@ public class Player : NetworkBehaviour {
                 // pulling = true for 1 second after the grapple lands
                 if (pulling)
                 {
+                    if(Vector3.Distance(transform.position, pivot) > visualChainLength * 1.5f)
+                    {
+                        try
+                        {
+                            chainInstance.RebuildChain();
+                            visualChainLength = visualChainLength * 1.5f;
+                        }
+                        catch (InvalidOperationException) { }
+                    }
+
                     //GetComponent<Rigidbody2D>().velocity += transform.position - pivot;
-                    GetComponent<Rigidbody2D>().AddForce(-pullForce * Time.deltaTime * (transform.position - pivot).normalized);
+                    if (Time.time - grappleTime < pullTime || Vector3.Distance(transform.position, pivot) > grappleLength)
+                    {
+                        GetComponent<Rigidbody2D>().AddForce(-pullForce * Time.deltaTime * (transform.position - pivot).normalized);
+                    }
+
+                    // TODO check to update pivot
 
                     // transition to pulling = false, pivoting = true after 1 second
                     //if (rb.velocity.magnitude > 1.5f && Mathf.Abs(Vector2.Dot(rb.velocity.normalized, (transform.position - pivot).normalized)) < 0.2)//  
-                    if(Time.time - grappleTime > pullTime)
+                    if(false && Time.time - grappleTime > pullTime)
                     {
                         pulling = false;
                         pivoting = true;
@@ -249,13 +290,13 @@ public class Player : NetworkBehaviour {
         }
     }
     
-    private void SpawnRope()
+    private void SpawnRope(Vector3 grapplePosition)
     {
         Debug.Log("Trying to spawn rope");
         if (grappleInstance != null)
         {
             chainInstance = Instantiate(chainPrefab);
-            chainInstance.CreateChain(grappleInstance.transform, this.transform);
+            chainInstance.CreateChain(grappleInstance.transform, this.transform, grapplePosition);
         }
     }
 
@@ -323,13 +364,15 @@ public class Player : NetworkBehaviour {
             pivot = position;
             pivoting = true;
             pulling = true;
+            grappleLength = Vector3.Distance(transform.position, position);
+            visualChainLength = grappleLength;
         }
 
         if (chainInstance != null)
         {
             Destroy(chainInstance.gameObject);
         }
-        SpawnRope();
+        SpawnRope(position);
     }
     [ClientRpc]
     internal void RpcGrapplePlayer(NetworkIdentity identity)
@@ -338,16 +381,6 @@ public class Player : NetworkBehaviour {
         {
             Player player = identity.GetComponent<Player>();
             // TODO player-player grappling
-			// Attaching to the grappled player detaches their grapple
-			player.grapplePrefab = null;
-			player.grappleInstance = null;
-			player.pulling = false;
-			player.pivoting = false;
-			player.pivot.x = 0;
-			player.pivot.y = 0;
-			player.pivot.z = 0;
-			player.pullTime = 0;
-			player.pullForce = 0;
 
         }
     }
@@ -370,16 +403,29 @@ public class Player : NetworkBehaviour {
     [ClientRpc]
     void RpcRespawn()
     {
+        lastRespawn = Time.time;
+
         Debug.Log("Player respawned");
         if (this.hasAuthority)
         {
-            myRenderer.enabled = true;
-            transform.position = Vector3.zero + Random.Range(-1f, 1f) * Vector3.up + Random.Range(-1f, 1f) * Vector3.right;
-            alive = true;
+            transform.position = Vector3.zero + UnityEngine.Random.Range(-1f, 1f) * Vector3.up + UnityEngine.Random.Range(-1f, 1f) * Vector3.right;
             pulling = false;
             pivoting = false;
-            GetComponent<Rigidbody2D>().isKinematic = false;
-            GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        }
+
+        alive = true;
+        myRenderer.enabled = true;
+
+        GetComponent<Rigidbody2D>().isKinematic = false;
+        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+
+        if (grappleInstance != null)
+        {
+            Destroy(grappleInstance.gameObject);
+        }
+        if (chainInstance != null)
+        {
+            Destroy(chainInstance.gameObject);
         }
     }
 
@@ -408,26 +454,41 @@ public class Player : NetworkBehaviour {
     [ClientRpc]
     void RpcLose()
     {
-        Debug.Log("Player lost");
-        GameObject deathEffect = Instantiate(deathPrefab);
-        deathEffect.transform.position = transform.position;
-        myRenderer.enabled = false;
-        alive = false;
-        GetComponent<Rigidbody2D>().isKinematic = true;
-        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        if (Time.time - lastRespawn > 1f)
+        {
+            Debug.Log("Player lost");
+            GameObject deathEffect = Instantiate(deathPrefab);
+            deathEffect.transform.position = transform.position;
+            myRenderer.enabled = false;
+            alive = false;
+            GetComponent<Rigidbody2D>().isKinematic = true;
+            GetComponent<Rigidbody2D>().velocity = Vector2.zero;
 
-        if (grappleInstance != null)
-        {
-            Destroy(grappleInstance.gameObject);
+            if (grappleInstance != null)
+            {
+                Destroy(grappleInstance.gameObject);
+            }
+            if (chainInstance != null)
+            {
+                Destroy(chainInstance.gameObject);
+            }
+            pulling = false;
+            pivoting = false;
         }
-        if (chainInstance != null)
-        {
-            Destroy(chainInstance.gameObject);
-        }
-        pulling = false;
-        pivoting = false;
     }
 
+    [Command]
+    void CmdAntiWall()
+    {
+        // TODO calculate nearest wall and repulsive force
+        Vector2 force = Vector2.zero;
+        RpcAntiWall(force);
+    }
+    [ClientRpc]
+    void RpcAntiWall(Vector2 force)
+    {
+        rb.AddForce(force, ForceMode2D.Impulse);
+    }
 
     [Command]
     void CmdBounce()
@@ -443,5 +504,11 @@ public class Player : NetworkBehaviour {
             float amount = Mathf.Max(bounceMinRadius, delta.magnitude);
             player.GetComponent<Rigidbody2D>().AddForce(-delta.normalized * 1f/amount * bounceForce);
         }
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        astronautSoundSource.clip = collisionSound;
+        astronautSoundSource.Play();
     }
 }
