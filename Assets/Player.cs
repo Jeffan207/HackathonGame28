@@ -47,6 +47,8 @@ public class Player : NetworkBehaviour {
     public Grapple grapplePrefab;
     private Grapple grappleInstance;
 
+    public LayerMask wallCheckMask;
+
     private bool pivoting;
     private bool pulling;
     private Vector3 pivot;
@@ -75,6 +77,7 @@ public class Player : NetworkBehaviour {
 	//sound effects
 	public AudioClip grappleHitSound;
 	public AudioClip collisionSound;
+	public AudioClip deathSound;
     private AudioSource astronautSoundSource;
 
     [Header("")]
@@ -235,6 +238,7 @@ public class Player : NetworkBehaviour {
                     }
 
                     // TODO check to update pivot
+                    RaycastHit2D hit = Physics2D.Raycast(transform.position, pivot - transform.position, Vector3.Distance(pivot, transform.position), wallCheckMask);
 
                     // transition to pulling = false, pivoting = true after 1 second
                     //if (rb.velocity.magnitude > 1.5f && Mathf.Abs(Vector2.Dot(rb.velocity.normalized, (transform.position - pivot).normalized)) < 0.2)//  
@@ -380,11 +384,24 @@ public class Player : NetworkBehaviour {
         if (this.hasAuthority)
         {
             Player player = identity.GetComponent<Player>();
-            // TODO player-player grappling
 
+            // player-player grappling
+            rb.velocity += player.rb.velocity;
+            CmdHaltPlayer(identity);
+            CmdGrappleDisconnect();
         }
     }
-
+    [Command]
+    private void CmdHaltPlayer(NetworkIdentity identity)
+    {
+        Player player = identity.GetComponent<Player>();
+        player.RpcHalt();
+    }
+    [ClientRpc]
+    private void RpcHalt()
+    {
+        rb.velocity = Vector2.zero;
+    }
 
     public void OnGUI()
     {
@@ -457,8 +474,13 @@ public class Player : NetworkBehaviour {
         if (Time.time - lastRespawn > 1f)
         {
             Debug.Log("Player lost");
+
             GameObject deathEffect = Instantiate(deathPrefab);
             deathEffect.transform.position = transform.position;
+
+            astronautSoundSource.clip = deathSound;
+            astronautSoundSource.Play();
+
             myRenderer.enabled = false;
             alive = false;
             GetComponent<Rigidbody2D>().isKinematic = true;

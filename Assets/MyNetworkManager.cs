@@ -85,14 +85,30 @@ public class MyNetworkManager : NetworkManager {
 
     public void LeaveGame()
     {
-        if (Network.isClient)
+        try
         {
             this.StopClient();
         }
-        if (Network.isServer)
+        catch (System.Exception e)
+        {
+            Debug.Log(e.StackTrace);
+        }
+        try
         {
             this.StopHost();
         }
+        catch (System.Exception e)
+        {
+            Debug.Log(e.StackTrace);
+        }
+
+        if (Network.isClient)
+        {
+        }
+        if (Network.isServer)
+        {
+        }
+
         Network.Disconnect();
     }
 
