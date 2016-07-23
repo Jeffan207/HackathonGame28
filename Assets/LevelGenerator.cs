@@ -15,6 +15,8 @@ public class LevelGenerator : NetworkBehaviour {
 
     private int moduleLead = 8;
 
+    public Arrow newArrowPrefab;
+
     void Awake()
     {
         currentModules = new List<Module>();
@@ -55,10 +57,14 @@ public class LevelGenerator : NetworkBehaviour {
     {
         Module latestModule = currentModules[currentModules.Count - 1];
 
-
         if (corner)
         {
             Module newModule = Instantiate(cornerModules[cornerIndex]);
+
+            Arrow arrow = Instantiate(newArrowPrefab);
+            arrow.transform.SetParent(newModule.transform);
+            arrow.SetSprite(Arrow.Direction.RIGHT);
+
             newModule.transform.position = latestModule.transform.position + latestModule.outVector * moduleWidth;
             currentModules.Add(newModule);
             if (this.isServer)
@@ -75,6 +81,7 @@ public class LevelGenerator : NetworkBehaviour {
             //up
             if (latestModule.outVector.y > Mathf.Abs(latestModule.outVector.x))
             {
+                //arrow.SetSprite(Arrow.Direction.UP);
                 if (right)
                 {
                     Debug.Log("Pointing right");
@@ -89,20 +96,29 @@ public class LevelGenerator : NetworkBehaviour {
             // right
             else if (latestModule.outVector.x > 0)
             {
+                //arrow.SetSprite(Arrow.Direction.RIGHT);
                 Debug.Log("Pointing up from right");
                 newModule.PointOutUp(true);
             }
             //left
             else
             {
+                //arrow.SetSprite(Arrow.Direction.LEFT);
                 Debug.Log("Pointing up from left");
                 newModule.PointOutUp(false);
             }
             NetworkServer.Spawn(newModule.gameObject);
+
+            arrow.transform.position = new Vector3(arrow.transform.position.x, arrow.transform.position.y, 2);
         }
         else
         {
             Module newModule = Instantiate(straightModules[straightIndex]);
+
+            Arrow arrow = Instantiate(newArrowPrefab);
+            arrow.transform.SetParent(newModule.transform);
+            arrow.SetSprite(Arrow.Direction.UP);
+
             newModule.transform.position = latestModule.transform.position + latestModule.outVector * moduleWidth;
             currentModules.Add(newModule);
             //latestModule.playersEnter -= AddNewModule;
@@ -111,19 +127,24 @@ public class LevelGenerator : NetworkBehaviour {
             //up
             if (latestModule.outVector.y > Mathf.Abs(latestModule.outVector.x))
             {
+                //arrow.SetSprite(Arrow.Direction.UP);
                 newModule.PointOutUp(false);
             }
             // right
             else if (latestModule.outVector.x > 0)
             {
+                //arrow.SetSprite(Arrow.Direction.RIGHT);
                 newModule.PointOutRight();
             }
             //left
             else
             {
+                //arrow.SetSprite(Arrow.Direction.LEFT);
                 newModule.PointOutLeft();
             }
             NetworkServer.Spawn(newModule.gameObject);
+
+            arrow.transform.position = new Vector3(arrow.transform.position.x, arrow.transform.position.y, 2);
         }
     }
     internal void StartNewRound()
