@@ -29,9 +29,11 @@ public class MatchmakingManager : MonoBehaviour {
 		networkMatch.CreateMatch(create, OnMatchCreate);
 	}
 
-	public void joinGame() {
-		networkMatch.ListMatches(0, 20, "", OnMatchList);
-	}
+    public void listGames()
+    {
+        gameLister.ClearList();
+        networkMatch.ListMatches(0, 20, "", OnMatchList);
+    }
 
     void OnGUI()
     {
@@ -80,17 +82,34 @@ public class MatchmakingManager : MonoBehaviour {
         }
     }
 
+    public GameList gameLister;
+    private List<MatchDesc> currentMatches;
+    public MenuHandler menuHandler;
+
+    public void joinGame(int index)
+    {
+        Debug.LogFormat("joining game {0}", index);
+
+        if (index >= 0 && index < currentMatches.Count)
+        {
+            menuHandler.joinGame();
+
+            networkMatch.JoinMatch(currentMatches[index].networkId, "", OnMatchJoined);
+        }
+    }
+
     public void OnMatchList(ListMatchResponse matchListResponse)
     {
         if (matchListResponse.success && matchListResponse.matches != null)
         {
-            if (matchListResponse.matches.Count > 0)
+            currentMatches = matchListResponse.matches;
+
+            int index = 0;
+            foreach (MatchDesc desc in matchListResponse.matches)
             {
-                networkMatch.JoinMatch(matchListResponse.matches[0].networkId, "", OnMatchJoined);
-            }
-            else
-            {
-                Debug.LogWarning("No matchmaking rooms");
+                int local = index;
+                gameLister.AddGame(() => { Debug.Log("Click!!!");  this.joinGame(local); }, "test");
+                index += 1;
             }
         }
     }

@@ -22,7 +22,7 @@ public class Grapple : NetworkBehaviour
         if (myPlayer != null)
         {
             lineRenderer.SetPosition(0, this.transform.position);
-            lineRenderer.SetPosition(1, myPlayer.transform.position);
+            lineRenderer.SetPosition(1, myPlayer.rb.transform.position);
         }
         else
         {

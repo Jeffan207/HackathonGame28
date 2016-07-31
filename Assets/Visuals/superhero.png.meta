@@ -1,0 +1,256 @@
+fileFormatVersion: 2
+guid: 606c1303fec2f1644a5e3e126bc9b1ee
+timeCreated: 1469426527
+licenseType: Free
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: superhero_0
+    21300002: superhero_1
+    21300004: superhero_2
+    21300006: superhero_3
+    21300008: superhero_4
+    21300010: superhero_5
+    21300012: superhero_6
+    21300014: superhero_7
+    21300016: superhero_8
+    21300018: superhero_9
+    21300020: superhero_10
+    21300022: superhero_11
+    21300024: superhero_12
+    21300026: superhero_13
+    21300028: superhero_14
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  cubemapConvolution: 0
+  cubemapConvolutionSteps: 7
+  cubemapConvolutionExponent: 1.5
+  seamlessCubemap: 0
+  textureFormat: -1
+  maxTextureSize: 2048
+  textureSettings:
+    filterMode: -1
+    aniso: 16
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  rGBM: 0
+  compressionQuality: 50
+  allowsAlphaSplitting: 0
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 100
+  alphaIsTransparency: 1
+  textureType: 8
+  buildTargetSettings: []
+  spriteSheet:
+    sprites:
+    - name: superhero_0
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 277
+        width: 27
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_1
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 263
+        width: 63
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16.5, y: 49}
+        - {x: -31.5, y: 24}
+        - {x: -31.5, y: -49}
+        - {x: 31.5, y: -49}
+        - {x: 31.5, y: 31}
+        - {x: 9.5, y: 49}
+    - name: superhero_2
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 216
+        width: 53
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -25.5, y: 17}
+        - {x: -26.5, y: 16}
+        - {x: -26.5, y: -15}
+        - {x: -20.5, y: -17}
+        - {x: 26.5, y: -17}
+        - {x: 26.5, y: 17}
+    - name: superhero_3
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 143
+        width: 27
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_4
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 143
+        width: 26
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_5
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 275
+        width: 28
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_6
+      rect:
+        serializedVersion: 2
+        x: 286
+        y: 219
+        width: 21
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_7
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 214
+        width: 22
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_8
+      rect:
+        serializedVersion: 2
+        x: 154
+        y: 179
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_9
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 183
+        width: 20
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_10
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 269
+        width: 96
+        height: 96
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -25, y: 48}
+        - {x: -48, y: 42}
+        - {x: -48, y: -48}
+        - {x: 44, y: -48}
+        - {x: 48, y: -32}
+        - {x: 48, y: 31}
+        - {x: 36, y: 48}
+    - name: superhero_11
+      rect:
+        serializedVersion: 2
+        x: 97
+        y: 148
+        width: 33
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_12
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 147
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_13
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 194
+        width: 22
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: superhero_14
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 192
+        width: 21
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    outline: []
+  spritePackingTag: 
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

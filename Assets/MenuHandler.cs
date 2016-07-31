@@ -24,13 +24,17 @@ public class MenuHandler : MonoBehaviour {
 		mainMenuPanel.SetActive(false);
 		hud.SetActive (true);
 	}
-	public void joinGame() {
-		matchmakingManager.joinGame ();
-		mainMenuPanel.SetActive(false);
-		hud.SetActive (true);
+	public void listGames() {
+		matchmakingManager.listGames ();
 	}
 
-	public void leaveGame() {
+    public void joinGame()
+    {
+        mainMenuPanel.SetActive(false);
+        hud.SetActive(true);
+    }
+
+    public void leaveGame() {
 		Debug.Log ("Got here");
         mainMenuPanel.SetActive(true);
 		pauseMenuPanel.SetActive (false);
