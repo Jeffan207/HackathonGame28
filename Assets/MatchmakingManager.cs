@@ -43,11 +43,13 @@ public class MatchmakingManager : MonoBehaviour {
             {
                 GetComponent<MyNetworkManager>().StartHost();
                 FindObjectOfType<Canvas>().enabled = false;
+                menuHandler.joinGame();
             }
             if (GUILayout.Button("Local Game Join"))
             {
                 GetComponent<MyNetworkManager>().StartClient();
                 FindObjectOfType<Canvas>().enabled = false;
+                menuHandler.joinGame();
             }
         }
 

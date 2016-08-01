@@ -70,6 +70,14 @@ public class Player : NetworkBehaviour {
     internal bool alive;
     private float lastRespawn;
 
+    internal float deathDistance
+    {
+        get
+        {
+            return 2f * Camera.main.orthographicSize;
+        }
+    }
+
     //sprite properties
     public Sprite stillSprite;
 	public Sprite moveSprite;
@@ -139,6 +147,24 @@ public class Player : NetworkBehaviour {
     }
 
     void Update () {
+        // lame way of networking ragdoll primary rigidbody
+        if(this.hasAuthority)
+        {
+            //this.transform.position = rb.transform.position;
+            //this.transform.rotation = rb.transform.rotation;
+        }
+        else
+        {
+            Vector3 delta = this.transform.position - rb.transform.position;
+            //rb.transform.position = this.transform.position;
+            //rb.transform.rotation = this.transform.rotation;
+
+            foreach(SpriteController bodyPart in myRenderers)
+            {
+                //bodyPart.transform.position += delta;
+            }
+        }
+
         if (alive)
         {
             if (this.isLocalPlayer)
@@ -295,7 +321,7 @@ public class Player : NetworkBehaviour {
             {
                 if (Time.time - MyNetworkManager.instance.restartTime > 3)
                 {
-                    if (rb.transform.position.y < penultimatePlayer.transform.position.y - Camera.main.orthographicSize)
+                    if (rb.transform.position.y < penultimatePlayer.transform.position.y - deathDistance)
                     {
                         CmdLose();
                         alive = false;
@@ -437,6 +463,7 @@ public class Player : NetworkBehaviour {
         if (this.hasAuthority)
         {
             rb.transform.position = Vector3.zero + UnityEngine.Random.Range(-1f, 1f) * Vector3.up + UnityEngine.Random.Range(-1f, 1f) * Vector3.right;
+            this.transform.position = rb.transform.position;
             pulling = false;
             pivoting = false;
         }
@@ -549,7 +576,10 @@ public class Player : NetworkBehaviour {
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        astronautSoundSource.clip = collisionSound;
-        astronautSoundSource.Play();
+        if (collision.gameObject.layer == 8)
+        {
+            astronautSoundSource.clip = collisionSound;
+            astronautSoundSource.Play();
+        }
     }
 }
